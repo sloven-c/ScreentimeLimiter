@@ -1,0 +1,68 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:ScreentimeLimiter.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="300"
+        Width="500"
+        Height="300"
+        CanResize="False"
+        x:Class="ScreentimeLimiter.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="Screentime Limiter">
+
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+    
+    
+    <Grid RowDefinitions="Auto, 90, Auto" 
+          ColumnDefinitions="*"
+          Margin="0 20 0 0"
+          >
+        <Border 
+            Padding="0 10"
+            Margin="80 0" 
+            CornerRadius="5" 
+            BorderBrush="Black" 
+            BorderThickness="2">
+        <StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <AutoCompleteBox Name="Hours" TextChanged="HoursAutoCompleteBox_OnTextChanged">
+                    <ToolTip.Tip>Hours</ToolTip.Tip>
+                </AutoCompleteBox>
+                <TextBlock Text=":" Padding="5" FontSize="50" />
+                <AutoCompleteBox Name="Minutes" TextChanged="MinutesAutoCompleteBox_OnTextChanged">
+                    <ToolTip.Tip>Minutes</ToolTip.Tip>
+                </AutoCompleteBox>
+            </StackPanel>
+            <TextBox Name="WarnTimes" Margin="20" Height="50" Watermark="Shutdown warning time: [5m,15m,2h]" TextChanged="WarnTimes_OnTextChanged">
+            </TextBox>
+        </StackPanel>
+            
+        </Border>
+        <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center">
+            
+            <ToggleButton
+                Name="ToggleExactRelative"
+                Margin="0" Padding="0"
+                Width="60" Height="60"
+                IsCheckedChanged="ExactTimeChangeBox_OnIsCheckedChanged">
+                <ToolTip.Tip>
+                    <TextBlock Text="{Binding ExactTimeCheckbox}" />
+                </ToolTip.Tip>
+            </ToggleButton>
+            
+            <Button
+                Name="Confirm"
+                Click="TimeSetConfirm_OnClick"
+                HorizontalAlignment="Center" VerticalContentAlignment="Center"
+                Height="60" FontSize="25"
+                Padding="10 5"
+                Content="{Binding ConfirmButtonMessage}" />
+        </StackPanel>
+    </Grid>
+</Window>
