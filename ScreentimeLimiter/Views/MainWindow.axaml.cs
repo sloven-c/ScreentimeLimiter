@@ -1,13 +1,18 @@
-using System.Linq;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
+using ScreentimeLimiter.Models;
 using ScreentimeLimiter.ViewModels;
 
 namespace ScreentimeLimiter.Views;
 
 public partial class MainWindow : Window {
+    private const string RegString = "^([0-9]{1,3})([mh])$";
+    private uint _hours, _minutes;
+    private uint[][]? _warnTimes;
+
     public MainWindow() {
         InitializeComponent();
     }
@@ -31,8 +36,13 @@ public partial class MainWindow : Window {
         if ((!uint.TryParse(Hours.Text, out var resultHours) || !(resultHours <= 24)) ||
             (!uint.TryParse(Minutes.Text, out var resultMinutes) || !(resultMinutes <= 59))) {
             Confirm.IsEnabled = false;
+            WarnTimes.IsEnabled = false;
             return;
         }
+
+        _hours = resultHours;
+        _minutes = resultMinutes;
+        WarnTimes.IsEnabled = true;
 
         CheckWarnParse();
     }
@@ -45,12 +55,24 @@ public partial class MainWindow : Window {
         }
         
         var warnTimesArray = warnTimes.Trim().ToLower().Split(",");
+        var times = new List<uint[]>();
+        
+        foreach (var warn in warnTimesArray) {
+            var match = Regex.Match(warn, RegString);
+            if (match.Success) {
+                var number = uint.Parse(match.Groups[1].Value);
+                var unit = (uint)(match.Groups[2].Value == "h" ? 1 : 0);
+                times.Add([number, unit]);
+            }
+            else {
+                Confirm.IsEnabled = false;
+                _warnTimes = null;
+                return;
+            }
+        }
 
-        const string regex = "^([0-9]{1,3})([mh])$";
-
-        if (warnTimesArray.Select(warn => Regex.Match(warn, regex)).Any(match => !match.Success)) {
-            Confirm.IsEnabled = false;
-            return;
+        if (times.Count != 0) {
+            _warnTimes = times.ToArray();
         }
 
         Confirm.IsEnabled = true;
@@ -61,10 +83,18 @@ public partial class MainWindow : Window {
     }
 
     private void TimeSetConfirm_OnClick(object? sender, RoutedEventArgs e) {
+        DisableAllButtons();
+    }
+
+    private void DisableAllButtons() {
         Hours.IsEnabled = false;
         Minutes.IsEnabled = false;
         WarnTimes.IsEnabled = false;
         ToggleExactRelative.IsEnabled = false;
         Confirm.IsEnabled = false;
+        Hide();
+
+        var shutTimer = new ShutdownTimer(_hours, _minutes, ToggleExactRelative.IsChecked, _warnTimes);
+        shutTimer.InitiateShutdown();
     }
 }
