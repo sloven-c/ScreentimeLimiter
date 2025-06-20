@@ -1,8 +1,12 @@
+using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 using ScreentimeLimiter.Models;
 using ScreentimeLimiter.ViewModels;
 
@@ -12,6 +16,7 @@ public partial class MainWindow : Window {
     private const string RegString = "^([0-9]{1,3})([mh])$";
     private uint _hours, _minutes;
     private uint[][]? _warnTimes;
+    
 
     public MainWindow() {
         InitializeComponent();
@@ -95,6 +100,30 @@ public partial class MainWindow : Window {
         Hide();
 
         var shutTimer = new ShutdownTimer(_hours, _minutes, ToggleExactRelative.IsChecked, _warnTimes);
+
+        shutTimer.NotificationRequested += DisplayNotification;
         shutTimer.InitiateShutdown();
+    }
+
+    private async void DisplayNotification(string title, string text) {
+        try {
+            await Dispatcher.UIThread.InvokeAsync(async () => {
+                Topmost = true;
+
+                var messageBox = MessageBoxManager.GetMessageBoxStandard(
+                    title: title,
+                    text: text,
+                    @enum: ButtonEnum.Ok,
+                    icon: MsBox.Avalonia.Enums.Icon.Warning
+                );
+
+                await messageBox.ShowWindowAsync();
+
+                Topmost = false;
+            });
+        }
+        catch (Exception e) {
+            Console.WriteLine($"Failed to display notification: {e}");
+        }
     }
 }

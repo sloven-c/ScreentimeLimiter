@@ -5,23 +5,25 @@ using System.Timers;
 namespace ScreentimeLimiter.Models;
 
 public class ShutdownTimer {
-    private uint _hours, _minutes;
-    private bool _type;
-    private uint[][]? _warnTimes;
+    private readonly uint _hours;
+    private readonly uint _minutes;
+    private readonly bool _type;
+    private readonly uint[][]? _warnTimes;
     private uint _minutesToGo;
+
+    public event Action<string, string>? NotificationRequested;
 
     public ShutdownTimer(uint hours, uint minutes, bool? type, uint[][]? warnTimes) {
         _hours = hours;
         _minutes = minutes;
         _type = type.HasValue && type.Value;
         _warnTimes = warnTimes;
-        
     }
 
     public void InitiateShutdown() {
         CalculateMinutesToGo();
-        CountdownMain();
         CountDownWarnings();
+        CountdownMain();
     }
 
     private void CalculateMinutesToGo() {
@@ -51,7 +53,6 @@ public class ShutdownTimer {
 
     private void CountDownWarnings() {
         if (_warnTimes == null) return;
-
         foreach (var warn in _warnTimes) {
             // [1] 1|0 hours | minutes
             var time = warn[0] * (warn[1]==1 ? 60u : 1u);
@@ -59,14 +60,18 @@ public class ShutdownTimer {
             // (if it does it would never reach us, therefore it'd be pointless to track it)
             if (time > _minutesToGo) continue;
 
-            var timer = new Timer(TimeSpan.FromMinutes(time));
+            var timer = new Timer(TimeSpan.FromMinutes(_minutesToGo - time));
             timer.Elapsed += (sender, e) => SendShutdownNotification(warn[0], warn[1]);
             timer.AutoReset = false;
         }
     }
 
     private void SendShutdownNotification(uint duration, uint isHour) {
-       
+        var unit = isHour == 1 ? "hours" : "minutes"; 
+        
+        const string title = "Shutdown Warning";
+        var text = $"System will shutdown in {duration} {unit}";
+        NotificationRequested?.Invoke(title, text);
     }
 
     private static void SystemShutdown() {
