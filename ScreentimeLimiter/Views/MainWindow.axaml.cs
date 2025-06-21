@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
@@ -19,9 +20,23 @@ public partial class MainWindow : Window {
 
     public MainWindow() {
         InitializeComponent();
+        this.Opened += OnWindowOpened;
         _dataStorage = new DataStorage();
         ReadFromDisk();
     }
+
+    private void OnWindowOpened(object? sender, EventArgs e) {
+        Topmost = true;
+        Activate();
+        Focus();
+
+        Task.Delay(100).ContinueWith(_ => {
+            Dispatcher.UIThread.InvokeAsync(() => {
+                Topmost = false;
+            });
+        });
+    }
+
 
     protected override void OnLoaded(RoutedEventArgs e) {
         base.OnLoaded(e);
