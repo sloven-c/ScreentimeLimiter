@@ -24,26 +24,35 @@ public partial class MainWindow : Window {
         ReadFromDisk();
     }
 
+    protected override void OnLoaded(RoutedEventArgs e) {
+        base.OnLoaded(e);
+        SetConfirmButtonMessage();
+    }
+
     private void ReadFromDisk() {
         var data = _dataStorage.Read();
         if (!data.HasValue) return;
         var dataVal = data.Value;
 
-        Hours.Text = dataVal.Hours;
-        Minutes.Text = dataVal.Minutes;
+        Hours.Text = dataVal.Hours.ToString();
+        Minutes.Text = dataVal.Minutes.ToString();
         WarnTimes.Text = dataVal.WarnTimes;
         ToggleExactRelative.IsChecked = dataVal.IsChecked;
     }
 
     private void SaveToDisk() {
-        var dataToSave = new DataStorage.DataPackage(Hours.Text!, Minutes.Text!, WarnTimes.Text!, ToggleExactRelative.IsChecked ?? false);
+        var dataToSave = new DataStorage.DataPackage(_hours, _minutes, WarnTimes.Text!, ToggleExactRelative.IsChecked ?? false);
         _dataStorage.Save(dataToSave);
     }
 
     private void ExactTimeChangeBox_OnIsCheckedChanged(object? sender, RoutedEventArgs e) {
-        if (DataContext is MainWindowViewModel viewModel && sender is ToggleButton checkbox) {
+        SetConfirmButtonMessage();
+    }
+
+    private void SetConfirmButtonMessage() {
+        if (DataContext is MainWindowViewModel viewModel) {
             viewModel.ConfirmButtonMessage =
-                (bool)checkbox.IsChecked! ? viewModel.AbsoluteTimeMessage : viewModel.RelativeTimeMessage;
+                ToggleExactRelative.IsChecked ?? false ? viewModel.AbsoluteTimeMessage : viewModel.RelativeTimeMessage;
         }
     }
 

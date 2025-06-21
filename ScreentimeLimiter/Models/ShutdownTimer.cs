@@ -63,6 +63,7 @@ public class ShutdownTimer {
             var timer = new Timer(TimeSpan.FromMinutes(_minutesToGo - time));
             timer.Elapsed += (sender, e) => SendShutdownNotification(warn[0], warn[1]);
             timer.AutoReset = false;
+            timer.Start();
         }
     }
 
