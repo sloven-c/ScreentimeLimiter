@@ -4,21 +4,11 @@ using System.Timers;
 
 namespace ScreentimeLimiter.Models;
 
-public class ShutdownTimer {
-    private readonly uint _hours;
-    private readonly uint _minutes;
-    private readonly bool _type;
-    private readonly uint[][]? _warnTimes;
+public class ShutdownTimer(uint hours, uint minutes, bool? type, uint[][]? warnTimes) {
+    private readonly bool _type = type.HasValue && type.Value;
     private uint _minutesToGo;
 
     public event Action<string, string>? NotificationRequested;
-
-    public ShutdownTimer(uint hours, uint minutes, bool? type, uint[][]? warnTimes) {
-        _hours = hours;
-        _minutes = minutes;
-        _type = type.HasValue && type.Value;
-        _warnTimes = warnTimes;
-    }
 
     public void InitiateShutdown() {
         CalculateMinutesToGo();
@@ -27,7 +17,7 @@ public class ShutdownTimer {
     }
 
     private void CalculateMinutesToGo() {
-        _minutesToGo = 60 * _hours + _minutes; // this is for relative shutdown (aka shutdown in x hours x minutes)
+        _minutesToGo = 60 * hours + minutes; // this is for relative shutdown (aka shutdown in x hours x minutes)
         if (!_type) return; 
         
         // we want the system to shutdown at exact time aka 22h
@@ -52,8 +42,8 @@ public class ShutdownTimer {
     }
 
     private void CountDownWarnings() {
-        if (_warnTimes == null) return;
-        foreach (var warn in _warnTimes) {
+        if (warnTimes == null) return;
+        foreach (var warn in warnTimes) {
             // [1] 1|0 hours | minutes
             var time = warn[0] * (warn[1]==1 ? 60u : 1u);
             // the warning time must not exceed the shutdown time
