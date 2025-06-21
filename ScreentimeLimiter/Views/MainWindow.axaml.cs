@@ -16,10 +16,28 @@ public partial class MainWindow : Window {
     private const string RegString = "^([0-9]{1,3})([mh])$";
     private uint _hours, _minutes;
     private uint[][]? _warnTimes;
-    
+    private readonly DataStorage _dataStorage;
 
     public MainWindow() {
         InitializeComponent();
+        _dataStorage = new DataStorage();
+        ReadFromDisk();
+    }
+
+    private void ReadFromDisk() {
+        var data = _dataStorage.Read();
+        if (!data.HasValue) return;
+        var dataVal = data.Value;
+
+        Hours.Text = dataVal.Hours;
+        Minutes.Text = dataVal.Minutes;
+        WarnTimes.Text = dataVal.WarnTimes;
+        ToggleExactRelative.IsChecked = dataVal.IsChecked;
+    }
+
+    private void SaveToDisk() {
+        var dataToSave = new DataStorage.DataPackage(Hours.Text!, Minutes.Text!, WarnTimes.Text!, ToggleExactRelative.IsChecked ?? false);
+        _dataStorage.Save(dataToSave);
     }
 
     private void ExactTimeChangeBox_OnIsCheckedChanged(object? sender, RoutedEventArgs e) {
@@ -98,6 +116,7 @@ public partial class MainWindow : Window {
         ToggleExactRelative.IsEnabled = false;
         Confirm.IsEnabled = false;
         Hide();
+        SaveToDisk();
 
         var shutTimer = new ShutdownTimer(_hours, _minutes, ToggleExactRelative.IsChecked, _warnTimes);
 
