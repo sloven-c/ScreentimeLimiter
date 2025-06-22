@@ -14,6 +14,7 @@ namespace ScreentimeLimiter.Views;
 
 public partial class MainWindow : Window {
     private const string RegString = "^([0-9]{1,3})([mh])$";
+    private const int TopMostTime = 10000;
     private uint _hours, _minutes;
     private uint[][]? _warnTimes;
     private readonly DataStorage _dataStorage;
@@ -30,7 +31,7 @@ public partial class MainWindow : Window {
         Activate();
         Focus();
 
-        Task.Delay(100).ContinueWith(_ => {
+        Task.Delay(TopMostTime).ContinueWith(_ => {
             Dispatcher.UIThread.InvokeAsync(() => {
                 Topmost = false;
             });

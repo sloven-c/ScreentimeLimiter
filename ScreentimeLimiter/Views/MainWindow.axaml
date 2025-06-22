@@ -62,7 +62,8 @@
                 HorizontalAlignment="Center" VerticalContentAlignment="Center"
                 Height="60" FontSize="25"
                 Padding="10 5"
-                Content="{Binding ConfirmButtonMessage}" />
+                Content="{Binding ConfirmButtonMessage}" 
+                IsDefault="True"/>
         </StackPanel>
     </Grid>
 </Window>
