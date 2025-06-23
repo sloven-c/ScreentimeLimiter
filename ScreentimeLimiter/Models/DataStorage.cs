@@ -31,6 +31,6 @@ public class DataStorage {
 
     public void Save(DataPackage data) {
         var jsonString = JsonSerializer.Serialize(data);
-        File.WriteAllText(_path, jsonString);
+        File.WriteAllText(_path, $"{jsonString}\n");
     }
 }
