@@ -4,7 +4,7 @@ using System.Timers;
 
 namespace ScreentimeLimiter.Models;
 
-public class ShutdownTimer(uint hours, uint minutes, bool? type, uint[][]? warnTimes) {
+public class ShutdownTimer(uint hours, uint minutes, uint[][]? warnTimes, bool? type) {
     private readonly bool _type = type.HasValue && type.Value;
     private uint _minutesToGo;
 
