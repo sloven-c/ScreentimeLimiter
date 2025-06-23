@@ -12,10 +12,12 @@
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
         Title="Screentime Limiter">
-
+    
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) 
+        TODO fix this for preview
+        -->
         <vm:MainWindowViewModel/>
     </Design.DataContext>
     

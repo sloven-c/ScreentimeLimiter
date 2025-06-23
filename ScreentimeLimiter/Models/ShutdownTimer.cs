@@ -8,14 +8,23 @@ public class ShutdownTimer(uint hours, uint minutes, uint[][]? warnTimes, bool? 
     private readonly bool _type = type.HasValue && type.Value;
     private uint _minutesToGo;
 
+    /// <summary>
+    /// Once timer for notification goes off this signals to VM to call DisplayNotification
+    /// </summary>
     public event Action<string, string>? NotificationRequested;
 
+    /// <summary>
+    /// Gets called immediately after constructor - starts the shutdown timing calculation and execution
+    /// </summary>
     public void InitiateShutdown() {
         CalculateMinutesToGo();
         CountDownWarnings();
         CountdownMain();
     }
 
+    /// <summary>
+    /// Calculates how many minutes left till the shutdown
+    /// </summary>
     private void CalculateMinutesToGo() {
         _minutesToGo = 60 * hours + minutes; // this is for relative shutdown (aka shutdown in x hours x minutes)
         if (!_type) return; 
@@ -34,6 +43,9 @@ public class ShutdownTimer(uint hours, uint minutes, uint[][]? warnTimes, bool? 
         }
     }
     
+    /// <summary>
+    /// Starts countdown for the computer shutdown
+    /// </summary>
     private void CountdownMain() {
         var timer = new Timer(TimeSpan.FromMinutes(_minutesToGo));
         timer.Elapsed += (sender, e) => SystemShutdown();
@@ -41,6 +53,9 @@ public class ShutdownTimer(uint hours, uint minutes, uint[][]? warnTimes, bool? 
         timer.Start();
     }
 
+    /// <summary>
+    /// Starts countdowns for each and every warning
+    /// </summary>
     private void CountDownWarnings() {
         if (warnTimes == null) return;
         foreach (var warn in warnTimes) {
@@ -57,6 +72,11 @@ public class ShutdownTimer(uint hours, uint minutes, uint[][]? warnTimes, bool? 
         }
     }
 
+    /// <summary>
+    /// Sends notification request to DisplayNotification and provides necessary parameters
+    /// </summary>
+    /// <param name="duration">in how much time the computer will shutdown</param>
+    /// <param name="isHour">whether the duration is in hours (1) or minutes (0)</param>
     private void SendShutdownNotification(uint duration, uint isHour) {
         var unit = isHour == 1 ? "hours" : "minutes"; 
         
@@ -65,6 +85,9 @@ public class ShutdownTimer(uint hours, uint minutes, uint[][]? warnTimes, bool? 
         NotificationRequested?.Invoke(title, text);
     }
 
+    /// <summary>
+    /// Attemps to shutdown the computer (Windows/Linux)
+    /// </summary>
     private static void SystemShutdown() {
         if (OperatingSystem.IsLinux()) {
             var psi = new ProcessStartInfo("systemctl", "poweroff") {

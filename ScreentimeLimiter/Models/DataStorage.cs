@@ -29,6 +29,10 @@ public class DataStorage {
         public bool IsChecked { get; init; }  = isChecked;
     }
 
+    /// <summary>
+    /// Reads the data and returns it within DataPackage? struct
+    /// </summary>
+    /// <returns>hour, minutes, warn times and if exact toggle button is checked</returns>
     public DataPackage? Read() {
         try {
             var content = File.ReadAllText(_path);
@@ -38,7 +42,11 @@ public class DataStorage {
             return null;
         }
     }
-
+    
+    /// <summary>
+    /// Saves the data into the file
+    /// </summary>
+    /// <param name="data">DataPackage structure which will be saved in json format</param>
     public void Save(DataPackage data) {
         var jsonString = JsonSerializer.Serialize(data);
         File.WriteAllText(_path, $"{jsonString}\n");

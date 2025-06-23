@@ -12,9 +12,9 @@ public partial class MainWindowViewModel : ViewModelBase {
     private const string RegString = "^([0-9]{1,2})([mh])$"; // for hours, minutes parsing when entering warnTimes
     private readonly DataStorage _dataStorage;
     
+    private uint _hours;
+    private uint _minutes;
     private uint[][]? _warnTimes;
-
-    private uint _hours, _minutes;
     
     // tracking text
     [ObservableProperty] private string _hoursText = null!;
@@ -43,6 +43,9 @@ public partial class MainWindowViewModel : ViewModelBase {
 
     private readonly IWindowHider _windowHider;
 
+    /// <summary>
+    /// Command that fires upon confirming the time
+    /// </summary>
     [RelayCommand(CanExecute = nameof(CanSetTime))]
     private void SetTime() {
         _windowHider.HideWindow();
@@ -54,6 +57,10 @@ public partial class MainWindowViewModel : ViewModelBase {
         shutTimer.InitiateShutdown();
     }
 
+    /// <summary>
+    /// Event that fires upon hours text change
+    /// </summary>
+    /// <param name="value">new value of hours textbox</param>
     partial void OnHoursTextChanged(string value) {
         var parse = ParseUint(value);
 
@@ -61,6 +68,10 @@ public partial class MainWindowViewModel : ViewModelBase {
         if (IsHoursValid) _hours = parse!.Value;
     }
 
+    /// <summary>
+    /// Event that fires upon minutes text change
+    /// </summary>
+    /// <param name="value">new value of minutes textbox</param>
     partial void OnMinutesTextChanged(string value) {
         var parse = ParseUint(value);
 
@@ -68,17 +79,33 @@ public partial class MainWindowViewModel : ViewModelBase {
         if (IsMinutesValid) _minutes = parse!.Value;
     }
 
+    /// <summary>
+    /// Event that fires upon warning times text change
+    /// </summary>
+    /// <param name="value">new value of warn time textbox</param>
     partial void OnWarnTimesTextChanged(string value) => IsWarnTimesValid = CheckWarnParse(value);
-
+    
     public void SetConfirmButtonMessage() => 
+        // todo can we try to do this via property so we don't have to call this variable
         ConfirmButtonMessage = IsExactTimeToggled ?? false ? AbsoluteTimeMessage : RelativeTimeMessage;
 
+    // todo this one should be called via property as mentioned above
     partial void OnIsExactTimeToggledChanged(bool? value) => SetConfirmButtonMessage();
 
+    /// <summary>
+    /// Attempts to parse into uint, primarily for hours and minutes
+    /// </summary>
+    /// <param name="value">string value to be parsed</param>
+    /// <returns>uint if parsing succeeds, null otherwise</returns>
     private static uint? ParseUint(string value) {
         return uint.TryParse(value, out var result) ? result : null;
     }
 
+    /// <summary>
+    /// Attempts to parse warning times into an array of uint, alonside with 
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns></returns>
     private bool CheckWarnParse(string value) {
         if (string.IsNullOrEmpty(value)) {
             return false;
@@ -107,13 +134,21 @@ public partial class MainWindowViewModel : ViewModelBase {
         return true;
     }
 
+    /// <summary>
+    /// Constructor
+    /// </summary>
+    /// <param name="windowHider">interface IWindowHider for strictly UI methods that can't be called in VM</param>
     public MainWindowViewModel(IWindowHider windowHider) {
         _windowHider = windowHider;
+        // todo remove
         SetConfirmButtonMessage();
         _dataStorage = new DataStorage();
         ReadFromDisk();
     }
 
+    /// <summary>
+    /// Calls method to read from disk and updates UI controls
+    /// </summary>
     private void ReadFromDisk() {
         var data = _dataStorage.Read();
         if (!data.HasValue) return;
@@ -125,6 +160,9 @@ public partial class MainWindowViewModel : ViewModelBase {
         IsExactTimeToggled = dataVal.IsChecked;
     }
 
+    /// <summary>
+    /// Calls method to save values in UI controls onto disk
+    /// </summary>
     private void SaveToDisk() {
         var dataToSave = new DataStorage.DataPackage(_hours, _minutes, WarnTimesText,
             IsExactTimeToggled ?? false);
