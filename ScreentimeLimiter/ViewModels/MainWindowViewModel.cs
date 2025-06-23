@@ -1,11 +1,7 @@
 ﻿using System.Collections.Generic;
-using System.Data;
 using System.Text.RegularExpressions;
-using Avalonia.Controls.Selection;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.VisualBasic;
 using ScreentimeLimiter.Models;
 
 namespace ScreentimeLimiter.ViewModels;
@@ -27,12 +23,22 @@ public partial class MainWindowViewModel : ViewModelBase {
     [ObservableProperty] private string _confirmButtonMessage = null!;
 
     [ObservableProperty] private bool? _isExactTimeToggled;
-    private bool IsWarnTimesEnabled => _isHoursValid && _isMinutesValid;
-    private bool IsConfirmEnabled => AllFieldsValidated();
-    private bool CanSetTime() => AllFieldsValidated();
-
+    public bool IsWarnTimesEnabled => IsHoursValid && IsMinutesValid;
+    public bool IsConfirmEnabled => IsHoursValid && IsMinutesValid && IsWarnTimesValid;
+    private bool CanSetTime() => IsHoursValid && IsMinutesValid && IsWarnTimesValid;
+    
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsConfirmEnabled))]
+    [NotifyPropertyChangedFor(nameof(IsWarnTimesEnabled))]
     private bool _isHoursValid;
+    
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsConfirmEnabled))]
+    [NotifyPropertyChangedFor(nameof(IsWarnTimesEnabled))]
     private bool _isMinutesValid;
+    
+    [ObservableProperty] 
+    [NotifyPropertyChangedFor(nameof(IsConfirmEnabled))]
     private bool _isWarnTimesValid;
 
     private readonly IWindowHider _windowHider;
@@ -51,37 +57,27 @@ public partial class MainWindowViewModel : ViewModelBase {
     partial void OnHoursTextChanged(string value) {
         var parse = ParseUint(value);
 
-        if (parse <= 24) {
-            _hours = parse.Value;
-            _isHoursValid = true;
-        }
-        else {
-            _isHoursValid = false;
-        }
+        IsHoursValid = parse <= 24;
+        if (IsHoursValid) _hours = parse!.Value;
     }
 
     partial void OnMinutesTextChanged(string value) {
         var parse = ParseUint(value);
 
-        if (parse <= 59) {
-            _minutes = parse.Value;
-            _isMinutesValid = true;
-        }
-        else {
-            _isMinutesValid = false;
-        }
+        IsMinutesValid = parse <= 59;
+        if (IsMinutesValid) _minutes = parse!.Value;
     }
-    
 
-    partial void OnWarnTimesTextChanged(string value) => _isWarnTimesValid = CheckWarnParse(value);
+    partial void OnWarnTimesTextChanged(string value) => IsWarnTimesValid = CheckWarnParse(value);
 
     public void SetConfirmButtonMessage() => 
         ConfirmButtonMessage = IsExactTimeToggled ?? false ? AbsoluteTimeMessage : RelativeTimeMessage;
 
     partial void OnIsExactTimeToggledChanged(bool? value) => SetConfirmButtonMessage();
 
-    private static uint? ParseUint(string value) => 
-        uint.TryParse(value, out var result) ? result : null;
+    private static uint? ParseUint(string value) {
+        return uint.TryParse(value, out var result) ? result : null;
+    }
 
     private bool CheckWarnParse(string value) {
         if (string.IsNullOrEmpty(value)) {
@@ -110,8 +106,6 @@ public partial class MainWindowViewModel : ViewModelBase {
 
         return true;
     }
-
-    private bool AllFieldsValidated() => _isHoursValid && _isMinutesValid && _isWarnTimesValid;
 
     public MainWindowViewModel(IWindowHider windowHider) {
         _windowHider = windowHider;

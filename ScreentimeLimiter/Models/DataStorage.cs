@@ -7,11 +7,21 @@ namespace ScreentimeLimiter.Models;
 public class DataStorage {
     private readonly string _path;
 
+    /// <summary>
+    /// Constructor for DataStorage class, initialises file path and creates directory
+    /// </summary>
     public DataStorage() {
         _path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ScreentimeLimiter", "data.json");
         Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
     }
 
+    /// <summary>
+    /// struct that gets converted into json upon saving or vice versa upon loading
+    /// </summary>
+    /// <param name="hours">hour of shutdown</param>
+    /// <param name="minutes">minutes of shutdown</param>
+    /// <param name="warnTimes">duration of warning notifications sent ahead of shutdown</param>
+    /// <param name="isChecked">whether we are inputting exact (true) or relative time (false)</param>
     public struct DataPackage(uint hours, uint minutes, string warnTimes, bool isChecked) {
         public uint Hours { get; init; } = hours;
         public uint Minutes { get; init; } = minutes;
