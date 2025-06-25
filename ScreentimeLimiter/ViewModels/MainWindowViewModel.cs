@@ -6,10 +6,17 @@ using ScreentimeLimiter.Models;
 
 namespace ScreentimeLimiter.ViewModels;
 
+/// <summary>
+/// Main window VM class
+/// </summary>
 public partial class MainWindowViewModel : ViewModelBase {
-    private const string RegString = "^([0-9]{1,2})([mh])$"; // for hours, minutes parsing when entering warnTimes
+    /// <summary>
+    /// for hours, minutes parsing when entering warnTimes
+    /// </summary>
+    private const string RegString = "^([0-9]{1,2})([mh])$";
     private readonly DataStorage _dataStorage;
     
+    // parsed input values
     private uint _hours;
     private uint _minutes;
     private uint[][]? _warnTimes;
@@ -18,16 +25,17 @@ public partial class MainWindowViewModel : ViewModelBase {
     [ObservableProperty] private string _hoursText = null!;
     [ObservableProperty] private string _minutesText = null!;
     [ObservableProperty] private string _warnTimesText = null!;
-
+    public string ConfirmButtonMessage => IsExactTimeToggled ?? false ? "Set exact time" : "Set countdown time";
+    
     [ObservableProperty] 
     [NotifyPropertyChangedFor(nameof(ConfirmButtonMessage))]
     private bool? _isExactTimeToggled;
     
-    public string ConfirmButtonMessage => IsExactTimeToggled ?? false ? "Set exact time" : "Set countdown time";
     public bool IsWarnTimesEnabled => IsHoursValid && IsMinutesValid;
     public bool IsConfirmEnabled => IsHoursValid && IsMinutesValid && IsWarnTimesValid;
-    private bool CanSetTime() => IsHoursValid && IsMinutesValid && IsWarnTimesValid;
+    private bool CanSetTime() => IsConfirmEnabled;
     
+    // is input valid
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsConfirmEnabled))]
     [NotifyPropertyChangedFor(nameof(IsWarnTimesEnabled))]
@@ -39,7 +47,10 @@ public partial class MainWindowViewModel : ViewModelBase {
     private bool _isMinutesValid;
 
     public bool IsWarnTimesValid => CheckWarnParse(WarnTimesText);
-
+    
+    /// <summary>
+    /// interface to allow us using some UI exclusive commands that we cannot do in VM by default
+    /// </summary>
     private readonly IWindowHider _windowHider;
 
     /// <summary>
