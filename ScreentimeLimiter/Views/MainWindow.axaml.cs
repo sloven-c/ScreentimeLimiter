@@ -1,12 +1,10 @@
 using System;
 using System.Threading.Tasks;
 using Avalonia.Controls;
-using Avalonia.Interactivity;
 using Avalonia.Threading;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 using ScreentimeLimiter.Models;
-using ScreentimeLimiter.ViewModels;
 
 namespace ScreentimeLimiter.Views;
 
@@ -57,10 +55,8 @@ public partial class MainWindow : Window, IWindowHider {
     }
 
     /// <summary>
-    /// Runs immediately when application starts
+    /// Runs immediately when application window opens
     /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
     private void OnWindowOpened(object? sender, EventArgs e) {
         Topmost = true;
         Activate();
@@ -71,18 +67,6 @@ public partial class MainWindow : Window, IWindowHider {
                 Topmost = false;
             });
         });
-    }
-
-    // todo remove
-    /// <summary>
-    /// Runs immediately when all elements are loaded
-    /// </summary>
-    /// <param name="e"></param>
-    protected override void OnLoaded(RoutedEventArgs e) {
-        base.OnLoaded(e);
-        if (DataContext is MainWindowViewModel vm) {
-            vm.SetConfirmButtonMessage();
-        }
     }
     
 }

@@ -3,7 +3,6 @@
         xmlns:vm="using:ScreentimeLimiter.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:viewModels="clr-namespace:ScreentimeLimiter.ViewModels"
         mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="300"
         Width="500"
         Height="300"
@@ -16,7 +15,6 @@
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
              to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) 
-        TODO fix this for preview
         -->
         <vm:MainWindowViewModel/>
     </Design.DataContext>

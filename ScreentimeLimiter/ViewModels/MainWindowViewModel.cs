@@ -7,8 +7,6 @@ using ScreentimeLimiter.Models;
 namespace ScreentimeLimiter.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase {
-    private static string AbsoluteTimeMessage => "Set exact time";
-    private static string RelativeTimeMessage => "Set countdown time";
     private const string RegString = "^([0-9]{1,2})([mh])$"; // for hours, minutes parsing when entering warnTimes
     private readonly DataStorage _dataStorage;
     
@@ -20,9 +18,12 @@ public partial class MainWindowViewModel : ViewModelBase {
     [ObservableProperty] private string _hoursText = null!;
     [ObservableProperty] private string _minutesText = null!;
     [ObservableProperty] private string _warnTimesText = null!;
-    [ObservableProperty] private string _confirmButtonMessage = null!;
 
-    [ObservableProperty] private bool? _isExactTimeToggled;
+    [ObservableProperty] 
+    [NotifyPropertyChangedFor(nameof(ConfirmButtonMessage))]
+    private bool? _isExactTimeToggled;
+    
+    public string ConfirmButtonMessage => IsExactTimeToggled ?? false ? "Set exact time" : "Set countdown time";
     public bool IsWarnTimesEnabled => IsHoursValid && IsMinutesValid;
     public bool IsConfirmEnabled => IsHoursValid && IsMinutesValid && IsWarnTimesValid;
     private bool CanSetTime() => IsHoursValid && IsMinutesValid && IsWarnTimesValid;
@@ -36,10 +37,8 @@ public partial class MainWindowViewModel : ViewModelBase {
     [NotifyPropertyChangedFor(nameof(IsConfirmEnabled))]
     [NotifyPropertyChangedFor(nameof(IsWarnTimesEnabled))]
     private bool _isMinutesValid;
-    
-    [ObservableProperty] 
-    [NotifyPropertyChangedFor(nameof(IsConfirmEnabled))]
-    private bool _isWarnTimesValid;
+
+    public bool IsWarnTimesValid => CheckWarnParse(WarnTimesText);
 
     private readonly IWindowHider _windowHider;
 
@@ -80,17 +79,12 @@ public partial class MainWindowViewModel : ViewModelBase {
     }
 
     /// <summary>
-    /// Event that fires upon warning times text change
+    /// Upon warn times change we re-evaluate if warn times is valid and consequently if confirm is enabled
     /// </summary>
-    /// <param name="value">new value of warn time textbox</param>
-    partial void OnWarnTimesTextChanged(string value) => IsWarnTimesValid = CheckWarnParse(value);
-    
-    public void SetConfirmButtonMessage() => 
-        // todo can we try to do this via property so we don't have to call this variable
-        ConfirmButtonMessage = IsExactTimeToggled ?? false ? AbsoluteTimeMessage : RelativeTimeMessage;
-
-    // todo this one should be called via property as mentioned above
-    partial void OnIsExactTimeToggledChanged(bool? value) => SetConfirmButtonMessage();
+    partial void OnWarnTimesTextChanged(string value) {
+        OnPropertyChanged(nameof(IsWarnTimesValid));
+        OnPropertyChanged(nameof(IsConfirmEnabled));
+    }
 
     /// <summary>
     /// Attempts to parse into uint, primarily for hours and minutes
@@ -140,11 +134,14 @@ public partial class MainWindowViewModel : ViewModelBase {
     /// <param name="windowHider">interface IWindowHider for strictly UI methods that can't be called in VM</param>
     public MainWindowViewModel(IWindowHider windowHider) {
         _windowHider = windowHider;
-        // todo remove
-        SetConfirmButtonMessage();
         _dataStorage = new DataStorage();
         ReadFromDisk();
     }
+    
+    /// <summary>
+    /// Only to be used by XAML for design time preview working correctly
+    /// </summary>
+    public MainWindowViewModel() : this(new MockWindowHider()) {}
 
     /// <summary>
     /// Calls method to read from disk and updates UI controls
