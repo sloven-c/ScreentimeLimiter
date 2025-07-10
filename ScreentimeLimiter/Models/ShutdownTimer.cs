@@ -99,6 +99,7 @@ public class ShutdownTimer(uint hours, uint minutes, uint[][]? warnTimes, bool? 
         if (warnTimes == null || !_minutesToGo.HasValue) return;
         _cntTimers = new Timer[warnTimes.Length];
         for (var i = 0; i < warnTimes.Length; i++) {
+            if (warnTimes[i][2] == 1) continue; // timer has already fired do not start it again
             // [1] 1|0 hours | minutes
             var time = warnTimes[i][0] * (warnTimes[i][1]==1 ? 60u : 1u);
             // the warning time must not exceed the shutdown time
@@ -107,7 +108,7 @@ public class ShutdownTimer(uint hours, uint minutes, uint[][]? warnTimes, bool? 
             
             var localIterator = i;
             _cntTimers[i] = new Timer(TimeSpan.FromMinutes(_minutesToGo.Value - time));
-            _cntTimers[i].Elapsed += (sender, e) => SendShutdownNotification(warnTimes[localIterator][0], warnTimes[localIterator][1]);
+            _cntTimers[i].Elapsed += (sender, e) => SendShutdownNotification(warnTimes[localIterator][0], warnTimes[localIterator][1], localIterator);
             _cntTimers[i].AutoReset = false;
             _cntTimers[i].Enabled = true;
         }
@@ -118,7 +119,10 @@ public class ShutdownTimer(uint hours, uint minutes, uint[][]? warnTimes, bool? 
     /// </summary>
     /// <param name="duration">in how much time the computer will shutdown</param>
     /// <param name="isHour">whether the duration is in hours (1) or minutes (0)</param>
-    private void SendShutdownNotification(uint duration, uint isHour) {
+    /// <param name="iterator">iterator which allows us to disable isFired data part in the <see cref="warnTimes"/> variable</param>
+    private void SendShutdownNotification(uint duration, uint isHour, int iterator) {
+        if (warnTimes != null)
+            warnTimes[iterator][2] = 1; // the timer has fired already and can't fire again
         var unit = isHour == 1 ? "hours" : "minutes"; 
         
         const string title = "Shutdown Warning";
