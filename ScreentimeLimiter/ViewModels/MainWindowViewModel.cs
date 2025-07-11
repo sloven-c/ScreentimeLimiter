@@ -124,7 +124,7 @@ public partial class MainWindowViewModel : ViewModelBase {
             if (match.Success) {
                 var number = uint.Parse(match.Groups[1].Value);
                 var unit = (uint)(match.Groups[2].Value == "h" ? 1 : 0);
-                times.Add([number, unit, 0]); // 0 means the timer has no fired yet
+                times.Add([number, unit]);
             }
             else {
                 _warnTimes = null;
