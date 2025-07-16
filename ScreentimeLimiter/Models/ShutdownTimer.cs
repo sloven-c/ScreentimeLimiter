@@ -12,7 +12,6 @@ public class ShutdownTimer(uint hours, uint minutes, uint[][]? warnTimes, bool? 
     private readonly bool _type = type.HasValue && type.Value;
     private uint? _minutesToGo;
     private Timer? _mainTimer;
-    private readonly Timer?[] _cntTimers = new Timer?[warnTimes?.Length ?? 0];
 
     /// <summary>
     /// Once timer for notification goes off this signals to VM to call DisplayNotification
@@ -39,7 +38,6 @@ public class ShutdownTimer(uint hours, uint minutes, uint[][]? warnTimes, bool? 
         
         // we save the old minutes value in order to prevent the countdown timings from recalculating if the buffer time is not exceeded
         CalculateMinutesToGo();
-        CountDownWarnings();
         CountdownMain();
     }
 
@@ -50,15 +48,7 @@ public class ShutdownTimer(uint hours, uint minutes, uint[][]? warnTimes, bool? 
     private bool VerifyRecalculation() {
         // if we do not have minutes left or timers initialised then (re)calculation must happen
         if (!_minutesToGo.HasValue || _mainTimer == null) return true;
-        if (TimeSpan.FromMilliseconds(_mainTimer.Interval) <= TimeSpan.FromMinutes(RecalculationBuffer)) return false;
-        
-        // here we check for each warntime
-        foreach (var timer in _cntTimers) {
-            if (timer != null && TimeSpan.FromMilliseconds(timer.Interval) <= TimeSpan.FromMinutes(RecalculationBuffer))
-                return false;
-        }
-        
-        return true;
+        return TimeSpan.FromMilliseconds(_mainTimer.Interval) > TimeSpan.FromMinutes(RecalculationBuffer);
     }
 
     /// <summary>
@@ -92,31 +82,6 @@ public class ShutdownTimer(uint hours, uint minutes, uint[][]? warnTimes, bool? 
         _mainTimer.Elapsed += (sender, e) => SystemShutdown();
         _mainTimer.AutoReset = false; // only fire once
         _mainTimer.Enabled = true;
-    }
-
-    /// <summary>
-    /// Starts countdowns for each and every warning
-    /// </summary>
-    private void CountDownWarnings() {
-        if (warnTimes == null || !_minutesToGo.HasValue) return;
-        
-        for (var i = 0; i < warnTimes.Length; i++) {
-            // [1] 1|0 hours | minutes
-            var time = warnTimes[i][0] * (warnTimes[i][1]==1 ? 60u : 1u);
-            // the warning time must not exceed the shutdown time
-            // (if it does it would never reach us, therefore it'd be pointless to track it)
-            if (time > _minutesToGo) continue;
-            _cntTimers[i]?.Dispose();
-                
-            var timer = new Timer(TimeSpan.FromMinutes(_minutesToGo.Value - time));
-
-            var i1 = i;
-            timer.Elapsed += (sender, e) => SendShutdownNotification(warnTimes[i1][0], warnTimes[i1][1], i1);
-            timer.AutoReset = false;
-            timer.Enabled = true;
-            
-            _cntTimers[i] = timer;
-        }
     }
 
     /// <summary>
